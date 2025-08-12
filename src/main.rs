@@ -119,36 +119,12 @@ fn run(font_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let mut font = ttf_context.load_font(font_path, 16.0)?;
     font.set_style(sdl3::ttf::FontStyle::NORMAL);
 
-    let mut text: String = "Open File: ".to_owned();
-
-    // render a surface, and convert it to a texture bound to the canvas
-    let surface = font
-        .render(&text)
-        .blended(Color::RGBA(0, 0, 0, 255))
-        .map_err(|e| e.to_string())?;
-    let texture = texture_creator
-        .create_texture_from_surface(&surface)
-        .map_err(|e| e.to_string())?;
-
-    canvas.set_draw_color(Color::RGBA(0xfa, 0xfa, 0xfa, 255));
-    canvas.clear();
-
-    let TextureQuery { width, height, .. } = texture.query();
-
-    // If the example text is too big for the screen, downscale it (and center irregardless)
-    let padding = 64;
-    let target = get_centered_rect(
-        width,
-        height,
-        SCREEN_WIDTH - padding,
-        SCREEN_HEIGHT - padding,
-    );
-
-    canvas.copy(&texture, None, Some(target.into()))?;
-    canvas.present();
-
     let mut state = State::NoFile;
     let mut saved_state = SavedState::Saved;
+    let mut text = "Open File: ".to_owned();
+
+    render(&mut canvas, &texture_creator, &font, &text, &saved_state)?;
+
 
     'mainloop: loop {
         for event in sdl_context.event_pump()?.poll_iter() {
@@ -158,12 +134,12 @@ fn run(font_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
                     keycode: Some(keycode),
                     keymod,
                     repeat,
-                    scancode: Some(scancode),
+                    scancode: Some(_),
                     ..
                 } => {
                     match keycode {
-                        Keycode::Escape => break 'mainloop,
-                        other => {
+                        // Keycode::Escape => break 'mainloop,
+                        keycode => {
                             // UPDATE SCREEN
 
                             // render a surface, and convert it to a texture bound to the canvas
@@ -289,7 +265,7 @@ fn run(font_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
                                         State::OpenFile(..) => "\n",
                                     },
                                     _ => {
-                                        println!("Unknown keycode {}", keycode);
+                                        // println!("Unknown keycode {}", keycode);
                                         ""
                                     }
                                 };
@@ -298,6 +274,8 @@ fn run(font_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
                                 if key != "" {
                                     saved_state = SavedState::Dirty;
                                 }
+
+                                render(&mut canvas, &texture_creator, &font, &text, &saved_state)?;
                             }
                         }
                     }
@@ -319,7 +297,7 @@ fn render(
     text: &String,
     saved_state: &SavedState,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let subs = text
+    let subs = (text.to_owned() + "_")
         .split('\n')
         .map(|line| {
             line.chars()
@@ -348,8 +326,7 @@ fn render(
             }
         })
         .collect::<Vec<String>>()
-        .join("\n")
-        + "_";
+        .join("\n");
 
     let surface = font
         .render(&subs)
@@ -364,7 +341,7 @@ fn render(
         SavedState::Saved => canvas.set_draw_color(Color::RGBA(0xf0, 0xf0, 0xf0, 255)),
         SavedState::Dirty => canvas.set_draw_color(Color::RGBA(0x0a, 0x0a, 0x0a, 255)),
     }
-    canvas.fill_rect(rect!(SCREEN_WIDTH - 30, 35, 5, 5));
+    canvas.fill_rect(rect!(SCREEN_WIDTH - 30, 35, 5, 5)).unwrap();
     let TextureQuery { width, height, .. } = texture.query();
     let padding = 64;
     let target = get_centered_rect(width, height, SCREEN_WIDTH - padding, SCREEN_HEIGHT);
