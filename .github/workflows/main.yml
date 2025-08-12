@@ -25,6 +25,8 @@ jobs:
           - stable
     steps:
       - uses: actions/checkout@v4
+      - name: install requirements
+        run: sudo apt install -y libsdl3-dev libsdl3-ttf-dev
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v1
         with:
