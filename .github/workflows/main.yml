@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: install thing
-        run: sudo apt install -y libsdl3-dev libsdl3-ttf-dev
+        run: sudo apt update && sudo apt install -y libsdl3-dev libsdl3-ttf-dev
       - name: Build binaries in "${{ matrix.BUILD_TARGET }}" mode
         run: cargo build --profile ${{ matrix.BUILD_TARGET }}
       - name: Run tests in "${{ matrix.BUILD_TARGET }}" mode
