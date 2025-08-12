@@ -32,7 +32,7 @@ jobs:
           target: ${{ matrix.platform.target }}
           toolchain: ${{ matrix.toolchain }}
           args:
-            "--locked --release --features ${{ steps.set-features-flag-value.outputs.features }}"
+            "--locked --release"
           strip: true
       - name: Publish artifacts and release
         uses: houseabsolute/actions-rust-release@v0
