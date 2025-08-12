@@ -335,11 +335,19 @@ fn render(
         .collect::<Vec<&str>>()
         .into_iter()
         .rev()
-        .take(32)
+        .take(30)
         .collect::<Vec<&str>>()
         .into_iter()
         .rev()
-        .collect::<Vec<&str>>()
+        .enumerate()
+        .map(|(i, line)| {
+            if (i + 1) % 5 == 0 {
+                format!("{:>4} │ {}", i + 1, line)
+            } else {
+                format!("     │ {}", line)
+            }
+        })
+        .collect::<Vec<String>>()
         .join("\n")
         + "_";
 
