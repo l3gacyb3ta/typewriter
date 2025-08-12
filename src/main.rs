@@ -331,6 +331,16 @@ fn render(
         })
         .collect::<Vec<String>>()
         .join("\n")
+        .lines()
+        .collect::<Vec<&str>>()
+        .into_iter()
+        .rev()
+        .take(32)
+        .collect::<Vec<&str>>()
+        .into_iter()
+        .rev()
+        .collect::<Vec<&str>>()
+        .join("\n")
         + "_";
 
     let surface = font
@@ -346,15 +356,10 @@ fn render(
         SavedState::Saved => canvas.set_draw_color(Color::RGBA(0xf0, 0xf0, 0xf0, 255)),
         SavedState::Dirty => canvas.set_draw_color(Color::RGBA(0x0a, 0x0a, 0x0a, 255)),
     }
-    canvas.fill_rect(rect!(SCREEN_WIDTH - 30, 30, 30, 30));
+    canvas.fill_rect(rect!(SCREEN_WIDTH - 30, 35, 5, 5));
     let TextureQuery { width, height, .. } = texture.query();
     let padding = 64;
-    let target = get_centered_rect(
-        width,
-        height,
-        SCREEN_WIDTH - padding,
-        SCREEN_HEIGHT,
-    );
+    let target = get_centered_rect(width, height, SCREEN_WIDTH - padding, SCREEN_HEIGHT);
     canvas.copy(&texture, None, Some(target.into()))?;
     canvas.present();
     Ok(())
