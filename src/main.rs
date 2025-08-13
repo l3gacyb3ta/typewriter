@@ -3,11 +3,11 @@ extern crate sdl3;
 use std::collections::HashMap;
 use std::env;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::Path;
 
 use sdl3::event::Event;
-use sdl3::keyboard::{Keycode, Mod, Scancode};
+use sdl3::keyboard::{Keycode, Mod};
 use sdl3::pixels::Color;
 use sdl3::rect::Rect;
 use sdl3::render::TextureQuery;
@@ -75,6 +75,25 @@ enum SavedState {
     Dirty,
 }
 
+fn get_text_files(fnt_path: &Path) -> String {
+    let path = fnt_path.parent().unwrap().join("text");
+    std::fs::create_dir_all(&path).unwrap();
+
+    let mut out = "".to_string();
+
+    for file in std::fs::read_dir(path).unwrap() {
+        if file.is_ok() {
+            let file = file.unwrap();
+
+            if file.path().extension().is_some_and(|ext| ext == "txt") {
+                out = out + " * " + file.path().file_stem().unwrap().to_str().unwrap() + ".txt\n";
+            }
+        }
+    }
+
+    out
+}
+
 fn run(font_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let sdl_context = sdl3::init()?;
     let video_subsys = sdl_context.video()?;
@@ -121,7 +140,7 @@ fn run(font_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut state = State::NoFile;
     let mut saved_state = SavedState::Saved;
-    let mut text = "Open File: ".to_owned();
+    let mut text = get_text_files(font_path) + "Open File: ";
 
     render(&mut canvas, &texture_creator, &font, &text, &saved_state)?;
 
@@ -196,7 +215,7 @@ fn run(font_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
                                             state = State::NoFile;
                                             saved_state = SavedState::Saved;
 
-                                            text = "Open File: ".to_owned();
+                                            text = get_text_files(font_path) + "Open File: ";
 
                                             render(
                                                 &mut canvas,
@@ -252,13 +271,14 @@ fn run(font_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
                                     Keycode::Underscore => "_",
                                     Keycode::Return => match state {
                                         State::NoFile => {
-                                            let path = if text.starts_with("Open File: ") {
-                                                text.strip_prefix("Open File: ").unwrap()
+                                            let path = if text.split("\n").last().unwrap().starts_with("Open File: ") {
+                                                text.split("\n").last().unwrap().strip_prefix("Open File: ").unwrap()
                                             } else {
                                                 &text
                                             };
 
-                                            text = state.open(path.to_owned()).unwrap();
+                                            let rl_path = font_path.parent().unwrap().join("text").join(path);
+                                            text = state.open(rl_path.to_str().unwrap().to_owned()).unwrap();
 
                                             ""
                                         }
@@ -351,16 +371,13 @@ fn render(
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<_> = env::args().collect();
-
     println!("linked sdl3_ttf: {}", sdl3::ttf::get_linked_version());
 
-    if args.len() < 2 {
-        println!("Usage: ./demo font.[ttf|ttc|fon]")
-    } else {
-        let path: &Path = Path::new(&args[1]);
-        run(path)?;
-    }
+    let path = env::home_dir().unwrap().join("typewriter");
+    std::fs::create_dir_all(&path)?;
+
+
+    run(&(path.join("VictorMono.ttf").as_path()))?;
 
     Ok(())
 }
