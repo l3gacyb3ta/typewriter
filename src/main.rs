@@ -120,6 +120,7 @@ fn run(font_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
         (",", "<"),
         (".", ">"),
         ("/", "?"),
+        ("`", "~"),
     ]);
 
     let window = video_subsys
@@ -352,21 +353,27 @@ fn render(
         .render(&subs)
         .blended_wrapped(Color::RGBA(0, 0, 0, 255), 1000)
         .map_err(|e| e.to_string())?;
+
     let texture = texture_creator
         .create_texture_from_surface(&surface)
         .map_err(|e| e.to_string())?;
+
     canvas.set_draw_color(Color::RGBA(0xfa, 0xfa, 0xfa, 255));
     canvas.clear();
+
     match *saved_state {
         SavedState::Saved => canvas.set_draw_color(Color::RGBA(0xf0, 0xf0, 0xf0, 255)),
         SavedState::Dirty => canvas.set_draw_color(Color::RGBA(0x0a, 0x0a, 0x0a, 255)),
     }
+
     canvas.fill_rect(rect!(SCREEN_WIDTH - 30, 35, 5, 5)).unwrap();
     let TextureQuery { width, height, .. } = texture.query();
     let padding = 64;
     let target = get_centered_rect(width, height, SCREEN_WIDTH - padding, SCREEN_HEIGHT);
+
     canvas.copy(&texture, None, Some(target.into()))?;
     canvas.present();
+
     Ok(())
 }
 
@@ -375,7 +382,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let path = env::home_dir().unwrap().join("typewriter");
     std::fs::create_dir_all(&path)?;
-
 
     run(&(path.join("VictorMono.ttf").as_path()))?;
 
